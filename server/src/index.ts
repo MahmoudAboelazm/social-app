@@ -22,7 +22,7 @@ const main = async () => {
     database: "postgres",
     username: "postgres",
     password: "123",
-
+    ////
     logging: true,
     synchronize: true,
     entities: [Post, User, Updoot],
