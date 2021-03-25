@@ -1,3 +1,3 @@
 # social-app
-## Technology used: ###Next.js
+## Technology used: ### Next.js
 
