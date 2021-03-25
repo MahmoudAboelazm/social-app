@@ -76,12 +76,17 @@ function updateQuery<Result, Query>(
 }
 export const createUrqlClient = (ssrExchange: any, ctx: any) => {
   let cookie: any;
+
   if (isServer()) {
-    if (ctx) cookie = ctx.req.headers.cookie;
+    //console.log("ctx :", ctx.req._consuming);
+
+    if (ctx) {
+      cookie = ctx.req.headers.cookie;
+    }
   }
 
   return {
-    url: "http://localhost:4000/graphql",
+    url: process.env.NEXT_PUBLIC_DB_HOST as string,
     fetchOptions: {
       credentials: "include" as const,
       headers: { cookie },
@@ -152,10 +157,12 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
             },
 
             login: (_result, args, cache, info) => {
+              cache.invalidate("Query", "sendCookie");
               const allFields = cache.inspectFields("Query");
               const fieldInfos = allFields.filter(
                 (info) => info.fieldName === "posts",
               );
+
               fieldInfos.forEach((fi) => {
                 cache.invalidate("Query", "posts", fi.arguments || {});
               });
@@ -174,6 +181,7 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
             },
 
             register: (_result, args, cache, info) => {
+              cache.invalidate("Query", "sendCookie");
               updateQuery<RegisterMutation, MeQuery>(
                 cache,
                 { query: MeDocument },

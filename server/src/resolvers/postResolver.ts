@@ -21,9 +21,9 @@ import { MyContext } from "../types";
 @InputType()
 class PostInput {
   @Field()
-  title: String;
+  title: string;
   @Field()
-  text: String;
+  text: string;
 }
 @ObjectType()
 class FieldPostError {
@@ -236,8 +236,8 @@ export class PostResolver {
   @UseMiddleware(isAuth)
   async updatePost(
     @Arg("id", () => Int) id: number,
-    @Arg("title", () => String) title: String,
-    @Arg("text", () => String) text: String,
+    @Arg("title", () => String) title: string,
+    @Arg("text", () => String) text: string,
     @Ctx() { req }: MyContext,
   ): Promise<Post | null> {
     const post = await Post.findOne(id);

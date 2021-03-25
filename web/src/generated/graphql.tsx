@@ -20,6 +20,7 @@ export type Query = {
   posts: PaginatedPosts;
   post?: Maybe<Post>;
   users: Array<User>;
+  sendCookie?: Maybe<Scalars['String']>;
   me?: Maybe<User>;
 };
 
@@ -143,6 +144,7 @@ export type UserResponse = {
   __typename?: 'UserResponse';
   error?: Maybe<Array<FieldError>>;
   user?: Maybe<User>;
+  cookie?: Maybe<Scalars['String']>;
 };
 
 export type FieldError = {
@@ -335,6 +337,14 @@ export type PostsQuery = (
   ) }
 );
 
+export type SendCookieQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type SendCookieQuery = (
+  { __typename?: 'Query' }
+  & Pick<Query, 'sendCookie'>
+);
+
 
 export const CreatePostDocument = gql`
     mutation CreatePost($input: PostInput!) {
@@ -521,4 +531,13 @@ export const PostsDocument = gql`
 
 export function usePostsQuery(options: Omit<Urql.UseQueryArgs<PostsQueryVariables>, 'query'> = {}) {
   return Urql.useQuery<PostsQuery>({ query: PostsDocument, ...options });
+};
+export const SendCookieDocument = gql`
+    query sendCookie {
+  sendCookie
+}
+    `;
+
+export function useSendCookieQuery(options: Omit<Urql.UseQueryArgs<SendCookieQueryVariables>, 'query'> = {}) {
+  return Urql.useQuery<SendCookieQuery>({ query: SendCookieDocument, ...options });
 };

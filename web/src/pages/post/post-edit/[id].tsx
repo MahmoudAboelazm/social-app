@@ -2,6 +2,8 @@ import { Box, Button } from "@chakra-ui/react";
 import { Form, Formik } from "formik";
 import { NextPage } from "next";
 import { withUrqlClient } from "next-urql";
+import { route } from "next/dist/next-server/server/router";
+import { useRouter } from "next/router";
 import React from "react";
 import { InputField } from "../../../components/InputField";
 import { Wrapper } from "../../../components/Wrapper";
@@ -22,7 +24,7 @@ const PostEdit: NextPage<PostProps> = ({ id }) => {
     },
   });
   const [, updatePost] = useUpdatePostMutation();
-
+  const router = useRouter();
   return (
     <Wrapper variant="small">
       {fetching ? (
@@ -34,11 +36,14 @@ const PostEdit: NextPage<PostProps> = ({ id }) => {
             text: data?.post?.text as string,
           }}
           onSubmit={async (values, { setErrors }) => {
-            updatePost({
+            const { data } = await updatePost({
               id,
               title: values.title,
               text: values.text,
             });
+            if (data?.updatePost) {
+              router.push("/");
+            }
           }}
         >
           {({ isSubmitting }) => (

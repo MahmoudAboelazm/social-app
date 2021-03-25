@@ -43,6 +43,9 @@ class UserResponse {
 
   @Field(() => User, { nullable: true })
   user?: User;
+
+  @Field(() => String, { nullable: true })
+  cookie?: string;
 }
 @Resolver(User)
 export default class UserResolver {
@@ -119,6 +122,11 @@ export default class UserResolver {
   @Query(() => [User])
   async users() {
     return await User.find({});
+  }
+
+  @Query(() => String, { nullable: true })
+  sendCookie(@Ctx() { req }: MyContext) {
+    return req.headers.cookie;
   }
 
   @Query(() => User, { nullable: true })
@@ -221,7 +229,7 @@ export default class UserResolver {
   async login(
     @Arg("usernameOrEmail") usernameOrEmail: string,
     @Arg("password") password: string,
-    @Ctx() { req }: MyContext,
+    @Ctx() { req, res, redis }: MyContext,
   ): Promise<UserResponse> {
     const user = await User.findOne(
       usernameOrEmail.includes("@")
@@ -249,9 +257,10 @@ export default class UserResolver {
         ],
       };
     }
+
     req.session.userId = user.id;
 
-    return { user };
+    return { user, cookie: `${req.headers.cookie}` };
   }
 
   @Mutation(() => Boolean)

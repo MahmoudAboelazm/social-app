@@ -35,11 +35,11 @@ export class Post extends BaseEntity {
 
   @Field()
   @Column()
-  title!: String;
+  title!: string;
 
   @Field()
   @Column()
-  text!: String;
+  text!: string;
 
   @Field()
   @Column({ type: "int", default: 0 })

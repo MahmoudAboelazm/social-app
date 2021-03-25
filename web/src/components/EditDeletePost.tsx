@@ -1,6 +1,7 @@
 import { DeleteIcon, EditIcon } from "@chakra-ui/icons";
 import { Box, Flex, IconButton, Link } from "@chakra-ui/react";
 import NextLink from "next/link";
+import { useRouter } from "next/router";
 import React from "react";
 import {
   PostsQuery,
@@ -19,6 +20,12 @@ const EditDeletePost: React.FC<editProps> = ({ post }) => {
   });
 
   const [, deletePost] = useDeletePostMutation();
+  const router = useRouter();
+  const handleDelete = async () => {
+    const { data } = await deletePost({ postId: post.id });
+    data?.deletePost ? router.push("/") : "";
+  };
+
   return (
     <>
       {data?.me?.id == post.creatorId ? (
@@ -39,7 +46,7 @@ const EditDeletePost: React.FC<editProps> = ({ post }) => {
             size="sm"
             icon={<DeleteIcon />}
             aria-label="delete-icon"
-            onClick={() => deletePost({ postId: post.id })}
+            onClick={handleDelete}
             ml={2}
           />
         </Flex>

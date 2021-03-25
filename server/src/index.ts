@@ -15,26 +15,33 @@ import { createConnection } from "typeorm";
 import { Post } from "./entities/Post";
 import { User } from "./entities/User";
 import { Updoot } from "./entities/Updoot";
-
+import dotenv from "dotenv";
+import path from "path";
+dotenv.config();
+///dd
 const main = async () => {
   const conn = await createConnection({
     type: "postgres",
-    database: "postgres",
-    username: "postgres",
-    password: "123",
-    ////
+
+    // ssl: {
+    //   rejectUnauthorized: false,
+    // },
+    url: process.env.DATABASE_URL,
     logging: true,
     synchronize: true,
     entities: [Post, User, Updoot],
   });
 
   const app = express();
+  //app.use(express.static(path.join(__dirname, "../out")));
+  //app.set("trust proxy", 1);
   app.use(
     cors({
-      origin: "http://localhost:3000",
+      origin: process.env.ORIGIN_URL,
       credentials: true,
     }),
   );
+
   const RedisStore = connectRedis(session);
   const redis = new Redis();
 
@@ -49,7 +56,7 @@ const main = async () => {
         secure: __prod__,
       },
       saveUninitialized: false,
-      secret: "akhfdjdfafda",
+      secret: process.env.SECRET as string,
       resave: false,
     }),
   );
@@ -66,8 +73,9 @@ const main = async () => {
     app,
     cors: false,
   });
-  app.listen(4000, () => {
-    console.log("you are on port 4000");
+  let port = process.env.PORT || 4000;
+  app.listen(port, () => {
+    console.log("you are on port ", port);
   });
 };
 

@@ -14,6 +14,7 @@ export const Wrapper: React.FC<WrapperProps> = ({
   return (
     <>
       <NavBar />
+
       <Box
         mt="100px"
         mx="auto"

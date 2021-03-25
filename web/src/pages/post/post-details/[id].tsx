@@ -22,7 +22,7 @@ const PostInfo: NextPage<PostProps> = ({ id }) => {
     <Wrapper>
       {fetching ? (
         <div>Loading...</div>
-      ) : !data ? (
+      ) : !data?.post ? (
         "no posts found"
       ) : (
         <Box>
