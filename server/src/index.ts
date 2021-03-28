@@ -17,6 +17,7 @@ import { User } from "./entities/User";
 import { Updoot } from "./entities/Updoot";
 import dotenv from "dotenv";
 import path from "path";
+import { createUpdootLoader, createUserLoader } from "./utils/createLoaders";
 dotenv.config();
 ///dd
 const main = async () => {
@@ -66,7 +67,13 @@ const main = async () => {
       resolvers: [Hello, PostResolver, UserResolver],
       validate: false,
     }),
-    context: ({ req, res }) => ({ req, res, redis }),
+    context: ({ req, res }) => ({
+      req,
+      res,
+      redis,
+      userLoader: createUserLoader(),
+      updootLoader: createUpdootLoader(),
+    }),
   });
   //
   applloServer.applyMiddleware({

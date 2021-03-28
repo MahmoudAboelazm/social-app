@@ -17,6 +17,8 @@ import { v4 } from "uuid";
 import { FORGET_PASSOWORD } from "../constants";
 import { sendEmail } from "../utils/sendMail";
 import { getConnection } from "typeorm";
+import { Post } from "../entities/Post";
+import { OAuth2Client } from "google-auth-library";
 
 @InputType()
 class userInput {
@@ -43,9 +45,14 @@ class UserResponse {
 
   @Field(() => User, { nullable: true })
   user?: User;
+}
 
-  @Field(() => String, { nullable: true })
-  cookie?: string;
+@ObjectType()
+class UserProfile {
+  @Field(() => User, { nullable: true })
+  user: User;
+  @Field(() => [Post], { nullable: true })
+  posts: Post[];
 }
 @Resolver(User)
 export default class UserResolver {
@@ -136,6 +143,25 @@ export default class UserResolver {
     }
 
     return User.findOne(req.session.userId);
+  }
+  @Query(() => UserProfile)
+  async userProfile(
+    @Arg("username") username: string,
+  ): Promise<UserProfile | null> {
+    const user = await User.findOne({ where: { username } });
+    if (!user) {
+      return null;
+    }
+    // const posts = await Post.find({ where: { creatorId: user.id } });
+
+    const posts = await getConnection()
+      .getRepository(Post)
+      .createQueryBuilder("p")
+      .orderBy('"createdAt"', "DESC")
+      .where('"creatorId" = :userid', { userid: user.id })
+      .getMany();
+
+    return { user, posts };
   }
   @Mutation(() => UserResponse)
   async register(
@@ -229,14 +255,15 @@ export default class UserResolver {
   async login(
     @Arg("usernameOrEmail") usernameOrEmail: string,
     @Arg("password") password: string,
-    @Ctx() { req, res, redis }: MyContext,
+    @Ctx() { req }: MyContext,
   ): Promise<UserResponse> {
-    const user = await User.findOne(
+    const userSignIn = await User.findOne(
       usernameOrEmail.includes("@")
         ? { where: { email: usernameOrEmail } }
         : { where: { username: usernameOrEmail } },
     );
-    if (!user) {
+
+    if (!userSignIn) {
       return {
         error: [
           {
@@ -246,7 +273,17 @@ export default class UserResolver {
         ],
       };
     }
-    const validate = await argon2.verify(user.password, password);
+    if (!userSignIn.password) {
+      return {
+        error: [
+          {
+            field: "usernameOrEmail",
+            message: "Try to sign in by your google account",
+          },
+        ],
+      };
+    }
+    const validate = await argon2.verify(userSignIn.password, password);
     if (!validate) {
       return {
         error: [
@@ -258,11 +295,107 @@ export default class UserResolver {
       };
     }
 
-    req.session.userId = user.id;
+    req.session.userId = userSignIn.id;
 
-    return { user, cookie: `${req.headers.cookie}` };
+    return { user: userSignIn };
   }
+  @Mutation(() => UserResponse)
+  async loginByGoogle(
+    @Arg("email") email: string,
+    @Arg("tokenId") tokenId: string,
+    @Arg("clientId") clientId: string,
+    @Ctx() { req }: MyContext,
+  ): Promise<UserResponse> {
+    // fetch the user from database
+    // search the user by email that provided by google
+    // if found but doesn't have google id then you will update it and login the user
+    // if the user not found then create new user with the given data
+    // then caching the user to redis
+    const client = new OAuth2Client(clientId);
+    const ticket = await client.verifyIdToken({
+      idToken: tokenId,
+      audience: clientId,
+    });
+    const payload = ticket.getPayload();
+    let userId: any;
 
+    // if we got an authentication
+    if (payload) {
+      console.log(payload["sub"]);
+      userId = payload["sub"];
+
+      // Step [1] check for the user
+      const user = await User.findOne({
+        where: { EXTERNAL_ID: userId },
+      });
+
+      //Step [2] user not found
+      if (!user) {
+        let newUser;
+        //Step [2][1] Maybe there is a user with the same email
+        const userE = await User.findOne({
+          where: { email },
+        });
+
+        if (userE) {
+          await User.update(
+            { id: userE.id },
+            { EXTERNAL_ID: userId, EXTERNAL_TYPE: "GOOGLE" },
+          );
+          userE.EXTERNAL_ID = userId;
+          userE.EXTERNAL_TYPE = "GOOGLE";
+
+          req.session.userId = userE.id;
+          return { user: userE };
+        }
+
+        //Step [2][2] if no user found with the same email
+        const username = email.split("@")[0];
+        try {
+          const result = await getConnection()
+            .createQueryBuilder()
+            .insert()
+            .into(User)
+            .values({
+              email,
+              username,
+              EXTERNAL_ID: userId,
+              EXTERNAL_TYPE: "GOOGLE",
+            })
+            .returning("*")
+            .execute();
+          newUser = result.raw[0];
+        } catch (err) {
+          if ((err.code = "23505")) {
+            return {
+              error: [
+                {
+                  field: "username",
+                  message: "username already exist",
+                },
+              ],
+            };
+          }
+        }
+
+        req.session.userId = newUser.id;
+        return { user: newUser };
+        //The End Of Step[2]
+      }
+
+      req.session.userId = user.id;
+      return { user };
+    }
+    // Not authenticated
+    return {
+      error: [
+        {
+          field: "auth",
+          message: "user isn't authenticated",
+        },
+      ],
+    };
+  }
   @Mutation(() => Boolean)
   logout(@Ctx() { req, res }: MyContext) {
     return new Promise((resolve) =>

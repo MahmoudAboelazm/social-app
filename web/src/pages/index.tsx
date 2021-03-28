@@ -11,7 +11,9 @@ import {
 import { withUrqlClient } from "next-urql";
 import NextLink from "next/link";
 import React, { useState } from "react";
+import GoogleLogin, { GoogleLogout } from "react-google-login";
 import EditDeletePost from "../components/EditDeletePost";
+import LoginByGoogle from "../components/LoginByGoogle";
 import VoteSection from "../components/VoteSection";
 import { Wrapper } from "../components/Wrapper";
 import {
@@ -29,6 +31,7 @@ const Index = () => {
     cursor: null as null | string,
   });
 
+  // Assign cookie to another URL if you aren't on the server domain
   const [{ data: cookiedata }] = useSendCookieQuery({
     pause: isServer(),
   });
@@ -64,7 +67,17 @@ const Index = () => {
                             </NextLink>
                           </Link>
                         </Heading>
-                        <Text> Posted By: {post.creator.username}</Text>
+                        <Text>
+                          Posted By:{" "}
+                          <Link>
+                            <NextLink
+                              href="/user/[userName]"
+                              as={"/user/" + post.creator.username}
+                            >
+                              {post.creator.username}
+                            </NextLink>
+                          </Link>
+                        </Text>
                         <Text mt={4}>{post.textSnippet}</Text>
                         <EditDeletePost post={post} />
                       </Box>

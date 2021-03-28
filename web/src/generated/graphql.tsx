@@ -22,6 +22,7 @@ export type Query = {
   users: Array<User>;
   sendCookie?: Maybe<Scalars['String']>;
   me?: Maybe<User>;
+  userProfile: UserProfile;
 };
 
 
@@ -33,6 +34,11 @@ export type QueryPostsArgs = {
 
 export type QueryPostArgs = {
   id: Scalars['Int'];
+};
+
+
+export type QueryUserProfileArgs = {
+  username: Scalars['String'];
 };
 
 export type PaginatedPosts = {
@@ -61,8 +67,16 @@ export type User = {
   username: Scalars['String'];
   email: Scalars['String'];
   password: Scalars['String'];
+  EXTERNAL_ID?: Maybe<Scalars['String']>;
+  EXTERNAL_TYPE?: Maybe<Scalars['String']>;
   createdAt: Scalars['String'];
   updatedAt: Scalars['String'];
+};
+
+export type UserProfile = {
+  __typename?: 'UserProfile';
+  user?: Maybe<User>;
+  posts?: Maybe<Array<Post>>;
 };
 
 export type Mutation = {
@@ -75,6 +89,7 @@ export type Mutation = {
   resetPassord: UserResponse;
   register: UserResponse;
   login: UserResponse;
+  loginByGoogle: UserResponse;
   logout: Scalars['Boolean'];
 };
 
@@ -123,6 +138,13 @@ export type MutationLoginArgs = {
   usernameOrEmail: Scalars['String'];
 };
 
+
+export type MutationLoginByGoogleArgs = {
+  clientId: Scalars['String'];
+  tokenId: Scalars['String'];
+  email: Scalars['String'];
+};
+
 export type PostResponse = {
   __typename?: 'PostResponse';
   error?: Maybe<Array<FieldPostError>>;
@@ -144,7 +166,6 @@ export type UserResponse = {
   __typename?: 'UserResponse';
   error?: Maybe<Array<FieldError>>;
   user?: Maybe<User>;
-  cookie?: Maybe<Scalars['String']>;
 };
 
 export type FieldError = {
@@ -215,6 +236,27 @@ export type LoginMutation = (
       { __typename?: 'User' }
       & Pick<User, 'username' | 'id'>
     )> }
+  ) }
+);
+
+export type LoginByGoogleMutationVariables = Exact<{
+  email: Scalars['String'];
+  clientId: Scalars['String'];
+  tokenId: Scalars['String'];
+}>;
+
+
+export type LoginByGoogleMutation = (
+  { __typename?: 'Mutation' }
+  & { loginByGoogle: (
+    { __typename?: 'UserResponse' }
+    & { user?: Maybe<(
+      { __typename?: 'User' }
+      & Pick<User, 'username' | 'id'>
+    )>, error?: Maybe<Array<(
+      { __typename?: 'FieldError' }
+      & Pick<FieldError, 'field' | 'message'>
+    )>> }
   ) }
 );
 
@@ -331,7 +373,7 @@ export type PostsQuery = (
       & Pick<Post, 'creatorId' | 'id' | 'text' | 'textSnippet' | 'title' | 'createdAt' | 'updatedAt' | 'points' | 'voteStatus'>
       & { creator: (
         { __typename?: 'User' }
-        & Pick<User, 'username' | 'id'>
+        & Pick<User, 'email' | 'username' | 'id'>
       ) }
     )> }
   ) }
@@ -343,6 +385,29 @@ export type SendCookieQueryVariables = Exact<{ [key: string]: never; }>;
 export type SendCookieQuery = (
   { __typename?: 'Query' }
   & Pick<Query, 'sendCookie'>
+);
+
+export type UserProfileQueryVariables = Exact<{
+  username: Scalars['String'];
+}>;
+
+
+export type UserProfileQuery = (
+  { __typename?: 'Query' }
+  & { userProfile: (
+    { __typename?: 'UserProfile' }
+    & { user?: Maybe<(
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'username' | 'email'>
+    )>, posts?: Maybe<Array<(
+      { __typename?: 'Post' }
+      & Pick<Post, 'creatorId' | 'id' | 'text' | 'textSnippet' | 'title' | 'createdAt' | 'updatedAt' | 'points' | 'voteStatus'>
+      & { creator: (
+        { __typename?: 'User' }
+        & Pick<User, 'email' | 'username' | 'id'>
+      ) }
+    )>> }
+  ) }
 );
 
 
@@ -401,6 +466,24 @@ export const LoginDocument = gql`
 
 export function useLoginMutation() {
   return Urql.useMutation<LoginMutation, LoginMutationVariables>(LoginDocument);
+};
+export const LoginByGoogleDocument = gql`
+    mutation LoginByGoogle($email: String!, $clientId: String!, $tokenId: String!) {
+  loginByGoogle(email: $email, clientId: $clientId, tokenId: $tokenId) {
+    user {
+      username
+      id
+    }
+    error {
+      field
+      message
+    }
+  }
+}
+    `;
+
+export function useLoginByGoogleMutation() {
+  return Urql.useMutation<LoginByGoogleMutation, LoginByGoogleMutationVariables>(LoginByGoogleDocument);
 };
 export const LogoutDocument = gql`
     mutation Logout {
@@ -521,6 +604,7 @@ export const PostsDocument = gql`
       points
       voteStatus
       creator {
+        email
         username
         id
       }
@@ -540,4 +624,35 @@ export const SendCookieDocument = gql`
 
 export function useSendCookieQuery(options: Omit<Urql.UseQueryArgs<SendCookieQueryVariables>, 'query'> = {}) {
   return Urql.useQuery<SendCookieQuery>({ query: SendCookieDocument, ...options });
+};
+export const UserProfileDocument = gql`
+    query UserProfile($username: String!) {
+  userProfile(username: $username) {
+    user {
+      id
+      username
+      email
+    }
+    posts {
+      creatorId
+      id
+      text
+      textSnippet
+      title
+      createdAt
+      updatedAt
+      points
+      voteStatus
+      creator {
+        email
+        username
+        id
+      }
+    }
+  }
+}
+    `;
+
+export function useUserProfileQuery(options: Omit<Urql.UseQueryArgs<UserProfileQueryVariables>, 'query'> = {}) {
+  return Urql.useQuery<UserProfileQuery>({ query: UserProfileDocument, ...options });
 };

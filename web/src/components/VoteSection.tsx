@@ -2,6 +2,7 @@ import { ChevronUpIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import { Box, IconButton, Text } from "@chakra-ui/react";
 import React, { useState } from "react";
 import { PostsQuery, useVoteMutation } from "../generated/graphql";
+import { userIsAuth } from "../utils/userIsAuth";
 
 interface VoteSectionProps {
   post: PostsQuery["posts"]["posts"][0];

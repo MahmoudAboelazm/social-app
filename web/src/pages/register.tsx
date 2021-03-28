@@ -9,10 +9,13 @@ import { toErrorMap } from "../utils/toErrorMap";
 import { useRouter } from "next/router";
 import { withUrqlClient } from "next-urql";
 import { createUrqlClient } from "../utils/createUrqlClient";
+import { userIsAuth } from "../utils/userIsAuth";
+import LoginByGoogle from "../components/LoginByGoogle";
 
 interface registerProps {}
 
 const Register: React.FC<registerProps> = ({}) => {
+  userIsAuth();
   const router = useRouter();
   const [, register] = useRegisterMutation();
   return (
@@ -58,6 +61,7 @@ const Register: React.FC<registerProps> = ({}) => {
           </Form>
         )}
       </Formik>
+      <LoginByGoogle />
     </Wrapper>
   );
 };

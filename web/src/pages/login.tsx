@@ -5,17 +5,19 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import React from "react";
 import { InputField } from "../components/InputField";
+import LoginByGoogle from "../components/LoginByGoogle";
 import { Wrapper } from "../components/Wrapper";
 import { useLoginMutation, useSendCookieQuery } from "../generated/graphql";
 import { createUrqlClient } from "../utils/createUrqlClient";
 import { toErrorMap } from "../utils/toErrorMap";
+import { userIsAuth } from "../utils/userIsAuth";
 
 interface loginProps {}
 
 const Login: React.FC<loginProps> = ({}) => {
+  userIsAuth();
   const router = useRouter();
   const [, login] = useLoginMutation();
-
   return (
     <Wrapper variant="small">
       <Formik
@@ -67,6 +69,7 @@ const Login: React.FC<loginProps> = ({}) => {
           </Form>
         )}
       </Formik>
+      <LoginByGoogle />
     </Wrapper>
   );
 };

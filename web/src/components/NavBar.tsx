@@ -21,7 +21,9 @@ import {
   useColorMode,
 } from "@chakra-ui/react";
 import NextLink from "next/link";
+import { useRouter } from "next/router";
 import React from "react";
+import { useGoogleLogout } from "react-google-login";
 import {
   useMeQuery,
   useLogoutMutation,
@@ -31,6 +33,19 @@ import isServer from "../utils/isServer";
 interface navProps {}
 const NavBar: React.FC<navProps> = ({}) => {
   const [, logout] = useLogoutMutation();
+  const { signOut } = useGoogleLogout({
+    clientId: process.env.NEXT_PUBLIC_CLIENT_ID as string,
+  });
+  const router = useRouter();
+  const handleLogout = async () => {
+    const res = await logout();
+    if (res) {
+      signOut();
+      document.cookie =
+        "qid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/user;";
+      router.push("/");
+    }
+  };
   const [{ data, fetching }] = useMeQuery({
     pause: isServer(),
   });
@@ -60,13 +75,16 @@ const NavBar: React.FC<navProps> = ({}) => {
             icon={<ChevronDownIcon />}
           />
           <MenuList>
-            <MenuItem>{data.me.username}</MenuItem>
+            <NextLink href="/user/[userName]" as={"/user/" + data.me.username}>
+              <MenuItem>{data.me.username}</MenuItem>
+            </NextLink>
+
             <NextLink href="/create-post">
               <MenuItem>Create Post</MenuItem>
             </NextLink>
 
             <MenuItem>
-              <Button onClick={() => logout()}>Logout</Button>
+              <Button onClick={handleLogout}>Logout</Button>
             </MenuItem>
           </MenuList>
         </Menu>

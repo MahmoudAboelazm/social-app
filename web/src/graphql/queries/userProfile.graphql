@@ -1,6 +1,10 @@
-query Posts($limit: Int!, $cursor: String) {
-  posts(limit: $limit, cursor: $cursor) {
-    hasMore
+query UserProfile($username: String!) {
+  userProfile(username: $username) {
+    user {
+      id
+      username
+      email
+    }
     posts {
       creatorId
       id

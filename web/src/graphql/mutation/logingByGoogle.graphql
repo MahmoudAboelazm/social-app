@@ -1,0 +1,17 @@
+mutation LoginByGoogle($email: String!, $clientId: String!, $tokenId: String!) {
+  loginByGoogle(
+    email: $email
+    clientId: $clientId
+
+    tokenId: $tokenId
+  ) {
+    user {
+      username
+      id
+    }
+    error {
+      field
+      message
+    }
+  }
+}

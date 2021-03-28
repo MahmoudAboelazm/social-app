@@ -1,4 +1,4 @@
-import { ObjectType, Field } from "type-graphql";
+import { ObjectType, Field, Int } from "type-graphql";
 import {
   Column,
   Entity,
@@ -33,8 +33,16 @@ export class User extends BaseEntity {
   email!: string;
 
   @Field()
-  @Column()
+  @Column({ nullable: true })
   password!: string;
+
+  @Field(() => String, { nullable: true })
+  @Column({ default: null })
+  EXTERNAL_ID!: String;
+
+  @Field(() => String, { nullable: true })
+  @Column({ default: null })
+  EXTERNAL_TYPE!: string;
 
   @Field(() => String)
   @CreateDateColumn()
