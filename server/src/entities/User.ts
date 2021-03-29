@@ -1,4 +1,4 @@
-import { ObjectType, Field, Int } from "type-graphql";
+import { ObjectType, Field } from "type-graphql";
 import {
   Column,
   Entity,
@@ -32,7 +32,6 @@ export class User extends BaseEntity {
   @Column({ unique: true })
   email!: string;
 
-  @Field()
   @Column({ nullable: true })
   password!: string;
 
