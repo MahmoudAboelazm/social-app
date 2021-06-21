@@ -1,5 +1,5 @@
 # Social app
- Social app built for missing around and learn TypeScript, Node.js and GraphQL.
+ Social app built for learnnig TypeScript, Node.js and GraphQL.
 
 ## Front-End Technologies: 
 - React
